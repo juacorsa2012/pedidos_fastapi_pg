@@ -4,15 +4,14 @@ from app.schemas.proveedor_schema import ProveedorCreate, ProveedorResponse
 from app.schemas.response_schema import ApiResponse
 from app.utils.messages import Mensajes
 from app.dependencies import get_proveedor_service
-from app.exceptions.custom_errors import ProveedorNoEncontradoError
 from app.core.pagination import Paginacion
 
 router = APIRouter()
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ApiResponse)
-async def crear_proveedor(proveedor: ProveedorCreate, service: ProveedorService = Depends(get_proveedor_service)):
-  nuevo_proveedor = await service.registrar_proveedor(proveedor)     
-  return ApiResponse(message=Mensajes.PROVEEDOR_CREADO, data=ProveedorResponse.model_validate(nuevo_proveedor))
+async def crear_proveedor(datos: ProveedorCreate, service: ProveedorService = Depends(get_proveedor_service)):
+  proveedor = await service.registrar_proveedor(datos)     
+  return ApiResponse(message=Mensajes.PROVEEDOR_CREADO, data=ProveedorResponse.model_validate(proveedor))
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=ApiResponse)
 async def obtener_proveedores(
@@ -33,26 +32,15 @@ async def obtener_proveedores(
         "hay_mas": paginacion.skip + len(proveedores) < total,
       },
     },
-)
-  
-@router.get("/{id}", status_code=status.HTTP_200_OK, response_model=ApiResponse)
-async def obtener_proveedor_por_id(id: int, service: ProveedorService = Depends(get_proveedor_service)):
-  proveedor = await service.obtener_por_id(id)
-
-  if not proveedor:
-    raise ProveedorNoEncontradoError(id)    
-   
-  return ApiResponse(
-    message=Mensajes.EXITO,
-    data=ProveedorResponse.model_validate(proveedor)    
   )
-
-@router.put("/{id}", status_code=status.HTTP_200_OK, response_model=ApiResponse)
-async def actualizar_proveedor(id: int, datos: ProveedorCreate, service: ProveedorService = Depends(get_proveedor_service)):
-  proveedor_actualizado = await service.actualizar_proveedor(id, datos.nombre)  
   
-  return ApiResponse(
-    message=Mensajes.PROVEEDOR_ACTUALIZADO,
-    data=ProveedorResponse.model_validate(proveedor_actualizado)    
-  )    
+@router.get("/{proveedor_id}", status_code=status.HTTP_200_OK, response_model=ApiResponse)
+async def obtener_proveedor_por_id(proveedor_id: int, service: ProveedorService = Depends(get_proveedor_service)):
+  proveedor = await service.obtener_por_id(proveedor_id)   
+  return ApiResponse(message=Mensajes.EXITO, data=ProveedorResponse.model_validate(proveedor))
+
+@router.put("/{proveedor_id}", status_code=status.HTTP_200_OK, response_model=ApiResponse)
+async def actualizar_proveedor(proveedor_id: int, datos: ProveedorCreate, service: ProveedorService = Depends(get_proveedor_service)):
+  proveedor_actualizado = await service.actualizar_proveedor(proveedor_id, datos)    
+  return ApiResponse(message=Mensajes.PROVEEDOR_ACTUALIZADO, data=ProveedorResponse.model_validate(proveedor_actualizado))    
   
