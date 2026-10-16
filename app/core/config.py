@@ -5,6 +5,8 @@ class Settings(BaseSettings):
   API_DESCRIPCION: str
   API_VERSION: str
   PORT: int
+  PAGINACION_LIMITE_POR_DEFECTO: int = 100
+  PAGINACION_LIMITE_MAXIMO: int = 500
   
   model_config = SettingsConfigDict(
     env_file=".env",

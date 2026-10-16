@@ -1,5 +1,6 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.exceptions.custom_errors import ProveedorYaExisteError, ProveedorNombreInvalidoError, ProveedorNoEncontradoError
 from app.models.proveedor_model import Proveedor
 from app.schemas.proveedor_schema import ProveedorCreate
@@ -28,11 +29,11 @@ class ProveedorService:
   async def obtener_por_nombre(self, nombre: str) -> Proveedor | None:
     return await self.repo.obtener_por_nombre(nombre)  
 
-  async def obtener_por_id(self, id: int) -> Proveedor | None:    
-    proveedor = await self.repo.obtener_por_id(id)   
+  async def obtener_por_id(self, proveedor_id: int) -> Proveedor:   
+    proveedor = await self.repo.obtener_por_id(proveedor_id)
 
     if proveedor is None:
-      raise ProveedorNoEncontradoError(id)
+      raise ProveedorNoEncontradoError(proveedor_id)
 
     return proveedor 
 
@@ -61,3 +62,6 @@ class ProveedorService:
     logger.info(f"Proveedor actualizado con éxito. Nuevo nombre asignado: {nuevo_proveedor.nombre}")
 
     return nuevo_proveedor
+
+  async def contar_todos(self) -> int:
+    return await self.repo.contar_registros()
