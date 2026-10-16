@@ -13,34 +13,27 @@ class ProveedorService:
     self.db = db
     self.repo = ProveedorRepository(db)
 
-  async def registrar_proveedor(self, proveedor: ProveedorCreate) -> Proveedor:    
-    nombre = proveedor.nombre.strip().upper()
-    
-    if len(nombre) == 0:
-      logger.warning("Intento de registro fallido: El nombre proporcionado estaba vacío.")
-      raise ProveedorNombreInvalidoError(Mensajes.PROVEEDOR_NOMBRE_VACIO)    
-    
-    existe = await self.repo.obtener_por_nombre(nombre)
-      
-    if existe:
-      logger.warning(f"Intento de registro fallido: El proveedor '{nombre}' ya existe en la BD.")
-      raise ProveedorYaExisteError(nombre)    
-    
-    nuevo_proveedor = await self.repo.registrar(nombre)   
-    logger.info(f"Proveedor registrado con éxito. ID asignado: {nuevo_proveedor.id}")
-    
-    return nuevo_proveedor
+  async def registrar_proveedor(self, datos: ProveedorCreate) -> Proveedor:
+    if await self.repo.obtener_por_nombre(datos.nombre):
+      raise ProveedorYaExisteError(datos.nombre)
 
-  async def obtener_todos(self, skip: int = 0, limit: int = 100) -> list[Proveedor]:
-    logger.info("Obteniendo todos los proveedores de la base de datos")
+    proveedor = await self.repo.registrar(datos.nombre)
+    await self.db.commit()
+    logger.info("Proveedor registrado. ID: %s", proveedor.id)
+    return proveedor    
+
+  async def obtener_todos(self, skip: int = 0, limit: int = 100) -> list[Proveedor]:    
     return await self.repo.obtener_todos(skip=skip, limit=limit)
 
   async def obtener_por_nombre(self, nombre: str) -> Proveedor | None:
     return await self.repo.obtener_por_nombre(nombre)  
 
-  async def obtener_por_id(self, id: int) -> Proveedor | None:
-    logger.info(f"Obteniendo proveedor con ID {id}")
+  async def obtener_por_id(self, id: int) -> Proveedor | None:    
     proveedor = await self.repo.obtener_por_id(id)   
+
+    if proveedor is None:
+      raise ProveedorNoEncontradoError(id)
+
     return proveedor 
 
   async def actualizar_proveedor(self, id: int, nuevo_nombre: str) -> Proveedor:
