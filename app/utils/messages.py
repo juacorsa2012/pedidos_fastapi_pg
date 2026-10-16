@@ -8,8 +8,7 @@ class Mensajes:
   CLIENTE_ACTUALIZADO = "Cliente actualizado correctamente"
   CLIENTE_NOMBRE_VACIO = "El nombre del cliente no puede estar vacío o contener solo espacios"
   CLIENTE_YA_EXISTE = "Ya existe un cliente con el nombre indicado. Por favor, indique otro distinto"
-
-  
+ 
   
   
   PEDIDO_CREADO = "Pedido creado correctamente"    

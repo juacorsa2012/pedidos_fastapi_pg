@@ -42,7 +42,7 @@ def register_exception_handlers(app):
 
     logger.warning("Error de validación en %s: %s", request.url.path, error_code)
     return JSONResponse(
-      status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+      status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
       content={
         "message": message,
         "data": None,
