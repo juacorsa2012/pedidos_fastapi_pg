@@ -8,6 +8,8 @@ from app.core.config import settings
 from database import dispose_engine
 from app.models import * 
 from app.routers.proveedor_router import router as proveedores_router
+from app.routers.cliente_router import router as clientes_router
+from app.routers.pedido_router import router as pedidos_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,6 +31,8 @@ app = FastAPI(
 register_exception_handlers(app)
 
 app.include_router(proveedores_router, prefix="/api/v1/proveedores", tags=["Proveedores"])
+app.include_router(clientes_router, prefix="/api/v1/clientes", tags=["Clientes"])
+app.include_router(pedidos_router, prefix="/api/v1/pedidos", tags=["Pedidos"])
 
 
 @app.get("/health")

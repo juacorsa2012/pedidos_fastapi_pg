@@ -1,6 +1,6 @@
 # Pedidos FastAPI
 
-API asíncrona para gestionar pedidos, proveedores y clientes. Actualmente están disponibles los endpoints CRUD de proveedores; los modelos de clientes y pedidos ya están definidos, pero sus rutas todavía no forman parte de la API.
+API asíncrona para gestionar clientes, proveedores y pedidos. Permite crear, consultar y actualizar clientes y proveedores, además de crear, consultar, filtrar, actualizar y eliminar pedidos.
 
 ## Requisitos
 
@@ -72,6 +72,19 @@ El servidor usa el puerto definido en `PORT`. Con el ejemplo anterior, la docume
 | `GET` | `/api/v1/proveedores/` | Listar proveedores con paginación | `200 OK` |
 | `GET` | `/api/v1/proveedores/{proveedor_id}` | Consultar proveedor por ID | `200 OK` |
 | `PUT` | `/api/v1/proveedores/{proveedor_id}` | Actualizar proveedor | `200 OK` |
+| `POST` | `/api/v1/clientes/` | Registrar cliente | `201 Created` |
+| `GET` | `/api/v1/clientes/` | Listar clientes con paginación | `200 OK` |
+| `GET` | `/api/v1/clientes/{cliente_id}` | Consultar cliente por ID | `200 OK` |
+| `PUT` | `/api/v1/clientes/{cliente_id}` | Actualizar cliente | `200 OK` |
+| `POST` | `/api/v1/pedidos/` | Crear pedido | `201 Created` |
+| `GET` | `/api/v1/pedidos/{pedido_id}` | Consultar pedido por ID | `200 OK` |
+| `GET` | `/api/v1/pedidos/estado/{estado}` | Filtrar pedidos por estado | `200 OK` |
+| `GET` | `/api/v1/pedidos/cliente/{cliente_id}` | Filtrar pedidos por cliente | `200 OK` |
+| `GET` | `/api/v1/pedidos/proveedor/{proveedor_id}` | Filtrar pedidos por proveedor | `200 OK` |
+| `GET` | `/api/v1/pedidos/cliente/{cliente_id}/estado/{estado}` | Filtrar por cliente y estado | `200 OK` |
+| `GET` | `/api/v1/pedidos/proveedor/{proveedor_id}/cliente/{cliente_id}` | Filtrar por proveedor y cliente | `200 OK` |
+| `PUT` | `/api/v1/pedidos/{pedido_id}` | Actualizar pedido | `200 OK` |
+| `DELETE` | `/api/v1/pedidos/{pedido_id}` | Eliminar pedido | `200 OK` |
 
 ### Ejemplo: registrar proveedor
 
@@ -107,6 +120,50 @@ La paginación del listado usa los parámetros `skip` y `limit`. `skip` debe ser
 GET /api/v1/proveedores/?skip=0&limit=100
 ```
 
+Los endpoints de listado de clientes y filtros de pedidos aceptan los mismos parámetros de paginación. Por ejemplo:
+
+```text
+GET /api/v1/pedidos/estado/pedido?skip=0&limit=50
+GET /api/v1/pedidos/cliente/1?skip=0&limit=50
+```
+
+## Pedidos
+
+Para crear un pedido, envía `producto`, `unidades`, `cliente_id` y `proveedor_id`. `oferta` es opcional y su valor predeterminado es `SIN OFERTA`; `solicitado_por` y `observaciones` también son opcionales. El estado inicial es `pedido`.
+
+```http
+POST /api/v1/pedidos/
+Content-Type: application/json
+```
+
+```json
+{
+  "producto": "Producto de ejemplo",
+  "unidades": 2,
+  "cliente_id": 1,
+  "proveedor_id": 1,
+  "oferta": "OFERTA 500",
+  "solicitado_por": "Nombre de quien solicita",
+  "observaciones": "Entregar por la mañana"
+}
+```
+
+La API verifica que existan el cliente y el proveedor antes de guardar el pedido. `producto` admite entre 1 y 255 caracteres después de quitar espacios externos; `unidades` debe ser mayor que cero; `oferta` admite hasta 25 caracteres y `observaciones`, hasta 1000.
+
+Los estados disponibles para filtrar son `pedido`, `preparado`, `entregado`, `cancelado`, `facturado` y `devuelto`. Un estado no reconocido produce HTTP 422. Los IDs de pedido en las rutas deben ser enteros positivos.
+
+Las respuestas de pedido incluyen los IDs y los objetos anidados `cliente` y `proveedor`. La actualización con `PUT` recibe los campos de creación y conserva el estado actual del pedido.
+
+```text
+GET    /api/v1/pedidos/estado/pedido
+GET    /api/v1/pedidos/cliente/1/estado/pedido
+GET    /api/v1/pedidos/proveedor/1
+GET    /api/v1/pedidos/proveedor/1/cliente/1
+GET    /api/v1/pedidos/1
+PUT    /api/v1/pedidos/1
+DELETE /api/v1/pedidos/1
+```
+
 Las respuestas de error usan un formato uniforme, por ejemplo:
 
 ```json
@@ -128,11 +185,14 @@ Ejecutar todas las pruebas:
 uv run pytest
 ```
 
-Ejecutar solo los tests del servicio o de la API:
+Ejecutar los tests de un servicio o router concreto:
 
 ```powershell
+uv run pytest tests/services/test_cliente_service.py
 uv run pytest tests/services/test_proveedor_service.py
+uv run pytest tests/routers/test_cliente_router.py
 uv run pytest tests/routers/test_proveedor_router.py
+uv run pytest tests/routers/test_pedido_router.py
 ```
 
 ## Estructura del proyecto

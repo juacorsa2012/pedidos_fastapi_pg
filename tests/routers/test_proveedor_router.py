@@ -23,16 +23,10 @@ async def test_endpoint_crear_proveedor_devuelve_201(client: AsyncClient, provee
 
 @pytest.mark.asyncio
 async def test_endpoint_crear_proveedor_duplicado_devuelve_409(client: AsyncClient, proveedor_service: ProveedorService) -> None:
-  primera_respuesta = await client.post(
-    PROVEEDORES_URL,
-    json={"nombre": "Proveedor"},
-  )
+  primera_respuesta = await client.post(PROVEEDORES_URL, json={"nombre": "Proveedor"})
   assert primera_respuesta.status_code == status.HTTP_201_CREATED
 
-  response = await client.post(
-    PROVEEDORES_URL,
-    json={"nombre": "  PROVEEDOR  "},
-  )
+  response = await client.post(PROVEEDORES_URL, json={"nombre": "  PROVEEDOR  "})
 
   cuerpo = response.json()
   
@@ -50,7 +44,7 @@ async def test_endpoint_crear_proveedor_nombre_largo_devuelve_422(client: AsyncC
   cuerpo = response.json()
 
   assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-  assert cuerpo["message"] == "El nombre no puede superar los 255 caracteres"
+  assert cuerpo["message"] == Mensajes.PROVEEDOR_NOMBRE_DEMASIADO_LARGO
   assert cuerpo["success"] is False
   assert cuerpo["error_code"] == "NOMBRE_INVALIDO"
   assert cuerpo["data"] is None
@@ -62,7 +56,7 @@ async def test_endpoint_crear_proveedor_nombre_en_blanco_devuelve_400(client: As
   cuerpo = response.json()
 
   assert response.status_code == status.HTTP_400_BAD_REQUEST
-  assert cuerpo["message"] == "El nombre no puede estar vacío"
+  assert cuerpo["message"] == "El nombre de un proveedor no puede estar vacío"
   assert cuerpo["success"] is False
   assert cuerpo["error_code"] == "NOMBRE_INVALIDO"
   assert cuerpo["data"] is None
@@ -118,6 +112,7 @@ async def test_endpoint_obtener_proveedor_por_id_devuelve_200(client: AsyncClien
   cuerpo = response.json()
 
   assert response.status_code == status.HTTP_200_OK
+  assert cuerpo["message"] == Mensajes.EXITO
   assert cuerpo["success"] is True
   assert cuerpo["data"]["id"] == proveedor_id
   assert cuerpo["data"]["nombre"] == "PROVEEDOR"
@@ -139,22 +134,22 @@ async def test_endpoint_actualizar_proveedor_normaliza_nombre(client: AsyncClien
 
 @pytest.mark.asyncio
 async def test_endpoint_actualizar_proveedor_con_nombre_duplicado_devuelve_409(client: AsyncClient) -> None:
-    await client.post(PROVEEDORES_URL, json={"nombre": "Proveedor A"})
-    alta_b = await client.post(PROVEEDORES_URL, json={"nombre": "Proveedor B"})
-    proveedor_b_id = alta_b.json()["data"]["id"]
+  await client.post(PROVEEDORES_URL, json={"nombre": "Proveedor A"})
+  alta_b = await client.post(PROVEEDORES_URL, json={"nombre": "Proveedor B"})
+  proveedor_b_id = alta_b.json()["data"]["id"]
 
-    response = await client.put(f"{PROVEEDORES_URL}{proveedor_b_id}", json={"nombre": "  proveedor a  "})
+  response = await client.put(f"{PROVEEDORES_URL}{proveedor_b_id}", json={"nombre": "  proveedor a  "})
 
-    cuerpo = response.json()
+  cuerpo = response.json()
 
-    assert response.status_code == status.HTTP_409_CONFLICT
-    assert cuerpo["message"] == "El proveedor 'PROVEEDOR A' ya existe en la base de datos"    
-    assert cuerpo["success"] is False
-    assert cuerpo["error_code"] == "PROVEEDOR_YA_EXISTE"
-    assert cuerpo["data"] is None
+  assert response.status_code == status.HTTP_409_CONFLICT
+  assert cuerpo["message"] == "El proveedor 'PROVEEDOR A' ya existe en la base de datos"    
+  assert cuerpo["success"] is False
+  assert cuerpo["error_code"] == "PROVEEDOR_YA_EXISTE"
+  assert cuerpo["data"] is None
 
-    proveedor_b = await client.get(f"{PROVEEDORES_URL}{proveedor_b_id}")
-    assert proveedor_b.json()["data"]["nombre"] == "PROVEEDOR B"
+  proveedor_b = await client.get(f"{PROVEEDORES_URL}{proveedor_b_id}")
+  assert proveedor_b.json()["data"]["nombre"] == "PROVEEDOR B"
 
 @pytest.mark.asyncio
 async def test_endpoint_actualizar_proveedor_inexistente_devuelve_404(client: AsyncClient) -> None:
@@ -178,7 +173,7 @@ async def test_endpoint_actualizar_proveedor_nombre_vacio_devuelve_400(client: A
   cuerpo = response.json()
 
   assert response.status_code == status.HTTP_400_BAD_REQUEST
-  assert cuerpo["message"] == "El nombre no puede estar vacío"
+  assert cuerpo["message"] == "El nombre de un proveedor no puede estar vacío"
   assert cuerpo["success"] is False
   assert cuerpo["error_code"] == "NOMBRE_INVALIDO"
   assert cuerpo["data"] is None
@@ -270,7 +265,7 @@ async def test_endpoint_actualizar_proveedor_nombre_largo_devuelve_422(client: A
   cuerpo = response.json()
 
   assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-  assert cuerpo["message"] == "El nombre no puede superar los 255 caracteres"
+  assert cuerpo["message"] == Mensajes.PROVEEDOR_NOMBRE_DEMASIADO_LARGO
   assert cuerpo["success"] is False
   assert cuerpo["error_code"] == "NOMBRE_INVALIDO"
   assert cuerpo["data"] is None

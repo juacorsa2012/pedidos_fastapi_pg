@@ -5,13 +5,16 @@ from fastapi import status
 from pydantic import ValidationError
 from app.exceptions.custom_errors import ProveedorNombreInvalidoError, ProveedorYaExisteError, ProveedorNoEncontradoError
 from app.schemas.proveedor_schema import ProveedorCreate
+from app.utils.messages import Mensajes
+
+# Clear-Host; pytest
 
 @pytest.mark.asyncio
 async def test_registrar_proveedor_guarda_nombre_normalizado(proveedor_service):  
-  proveedor = await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="   cliente 1  "))
+  proveedor = await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="   proveedor 1  "))
 
   assert proveedor.id is not None
-  assert proveedor.nombre == "CLIENTE 1"
+  assert proveedor.nombre == "PROVEEDOR 1"
   assert await proveedor_service.contar_todos() == 1
 
 
@@ -23,7 +26,7 @@ async def test_registrar_proveedor_rechaza_nombre_vacio(proveedor_service):
   assert await proveedor_service.contar_todos() == 0
   assert exc.value.status_code == status.HTTP_400_BAD_REQUEST
   assert exc.value.error_code == "NOMBRE_INVALIDO"
-  assert exc.value.detail == "El nombre no puede estar vacío"
+  assert exc.value.detail == Mensajes.PROVEEDOR_NOMBRE_VACIO
 
 
 def test_proveedor_create_rechaza_nombre_mayor_de_255_caracteres():
@@ -52,16 +55,16 @@ async def test_registrar_proveedor_rechaza_nombre_vacio(proveedor_service):
 
   assert exc.value.status_code == status.HTTP_400_BAD_REQUEST
   assert exc.value.error_code == "NOMBRE_INVALIDO"
-  assert exc.value.detail == "El nombre no puede estar vacío"
+  assert exc.value.detail == Mensajes.PROVEEDOR_NOMBRE_VACIO
   assert await proveedor_service.contar_todos() == 0
 
 
 @pytest.mark.asyncio
 async def test_registrar_proveedor_rechaza_nombre_duplicado(proveedor_service):
-  await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="Cliente"))
+  await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="Proveedor"))
 
   with pytest.raises(ProveedorYaExisteError) as exc:
-    await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="  CLIENTE  "))
+    await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="  PROVEEDOR  "))
 
   assert exc.value.status_code == status.HTTP_409_CONFLICT
   assert exc.value.error_code == "PROVEEDOR_YA_EXISTE"
@@ -80,7 +83,7 @@ async def test_registrar_proveedor_convierte_integrity_error_en_duplicado(provee
   proveedor_service.db.rollback = AsyncMock()
 
   with pytest.raises(ProveedorYaExisteError) as exc:
-    await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="Cliente"))
+    await proveedor_service.registrar_proveedor(ProveedorCreate(nombre="Proveedor"))
 
   assert exc.value.error_code == "PROVEEDOR_YA_EXISTE"
   proveedor_service.db.rollback.assert_awaited_once()
